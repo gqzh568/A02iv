@@ -1,2 +1,3 @@
-#直播线路为http://47.120.41.246:8025/vip/jar/zb.php
-#
+# 直播线路为http://47.120.41.246:8025/vip/jar/zb.php
+# 解析https://700sjro44343.vicp.fun/eggp/0211/tv.json或者https://700sjro44343.vicp.fun/vip/vip/tv.json
+# 哈

@@ -3,3 +3,4 @@
 http://e.erw.cc/e.xml.gz
 https://epg.aptv.app/pp.xml.gz
 http://epg.51zmt.top:8000/e.xml.gz
+http://epg.51zmt.top:8000/api/diyp/

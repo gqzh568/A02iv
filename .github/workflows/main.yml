@@ -98,6 +98,13 @@ jobs:
           path: release-assets
           if-no-files-found: error
           retention-days: 1
+      - name: Debug path
+        run: |
+          pwd
+          echo "pages-site absolute path:"
+          realpath pages-site
+          echo "Files inside:"
+          find pages-site
       # ====== 【新增：部署 pages-site 到 Cloudflare Pages】======
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v4

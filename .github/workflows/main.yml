@@ -111,8 +111,9 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # !!! 这里改成你自己CF Pages项目名称 !!!
-          command: pages deploy ./pages-site --project-name=iptv-site
+          command: |
+            cd /home/runner/work/A02iv/A02iv
+            npx wrangler pages deploy ./pages-site --project-name=iptv-site --branch=production --commit-dirty=true
       # ========================================================
       - name: Report non-persistent configuration changes
         run: |

@@ -1,4 +1,4 @@
-name: Generate playlist manually
+name: Generate playlist manually bak
 on:
   workflow_dispatch:
   schedule:

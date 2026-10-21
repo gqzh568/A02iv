@@ -6,8 +6,10 @@ on:
       timezone: 'Asia/Shanghai'
 permissions:
   contents: read
+  pages: write
+  id-token: write
 concurrency:
-  group: "playlist"
+  group: "pages"
   cancel-in-progress: false
 jobs:
   generate:
@@ -15,6 +17,8 @@ jobs:
     timeout-minutes: 300
     permissions:
       contents: read
+      pages: write
+      id-token: write
     outputs:
       source_sha: ${{ steps.source.outputs.sha }}
       tag: ${{ steps.release.outputs.tag }}
@@ -98,15 +102,12 @@ jobs:
           path: release-assets
           if-no-files-found: error
           retention-days: 1
-      # ====== 【新增：部署 pages-site 到 Cloudflare Pages】======
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # !!! 这里改成你自己CF Pages项目名称 !!!
-          command: pages deploy ./pages-site --project-name=iptv-site
-      # ========================================================
+          path: pages-site
       - name: Report non-persistent configuration changes
         run: |
           if ! diff -qr "$RUNNER_TEMP/iptv-config-before" config >/dev/null; then
@@ -147,7 +148,7 @@ jobs:
             echo "🌐 Pages网页：$PAGES_BASE"
             echo "📺 订阅地址（永久不变）：${PAGES_BASE}result.m3u"
             echo
-            echo "Release下载链接（仓库私有后，外网直接访问404，仅登录协作者可用）："
+            echo "Release下载链接："
             echo "- Release TXT: $RELEASE_BASE/result.txt"
             if [[ -f release-assets/result.m3u ]]; then
               echo "- Release M3U: $RELEASE_BASE/result.m3u"
@@ -158,7 +159,20 @@ jobs:
             echo
             echo "Generated from \`${{ steps.assets.outputs.final_file }}\` without creating a Git commit."
           } >> "$GITHUB_STEP_SUMMARY"
-
+  deploy-pages:
+    needs: generate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
   publish-release:
     needs: generate
     runs-on: ubuntu-latest

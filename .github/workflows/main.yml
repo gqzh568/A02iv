@@ -98,22 +98,14 @@ jobs:
           path: release-assets
           if-no-files-found: error
           retention-days: 1
-      - name: Debug path
-        run: |
-          pwd
-          echo "pages-site absolute path:"
-          realpath pages-site
-          echo "Files inside:"
-          find pages-site
       # ====== 【新增：部署 pages-site 到 Cloudflare Pages】======
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v4
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: |
-            cd /home/runner/work/A02iv/A02iv
-            npx wrangler pages deploy ./pages-site --project-name=iptv-site --branch=production --commit-dirty=true
+          # !!! 这里改成你自己CF Pages项目名称 !!!
+          command: pages deploy ./pages-site --project-name=iptv-site
       # ========================================================
       - name: Report non-persistent configuration changes
         run: |

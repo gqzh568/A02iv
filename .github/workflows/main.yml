@@ -82,6 +82,8 @@ jobs:
           echo "generated_at=${release_metadata[2]}" >> "$GITHUB_OUTPUT"
       - name: Prepare public release assets & pages site
         id: assets
+        env:
+          REPO: ${{ github.repository }}
         run: |
           final_file="$(pipenv run python -c 'from utils.config import config; print(config.final_file)')"
           pipenv run python scripts/publish_results.py \
@@ -93,7 +95,7 @@ jobs:
             --pages-base-url "https://iptv.711933.xyz/"
           echo "final_file=$final_file" >> "$GITHUB_OUTPUT"
 
-          # 兜底：pages-site为空时生成备用页面，避免Pages回退README
+          # 兜底：pages-site为空，生成简单提示页
           if [ -z "$(ls -A pages-site 2>/dev/null)" ]; then
             echo "⚠️ publish_results.py 没有生成页面，写入兜底index.html"
             cat > pages-site/index.html <<'EOF'
@@ -107,12 +109,14 @@ jobs:
 <body style="font-family:system-ui;padding:2rem;max-width:800px;margin:0 auto;">
 <h2>⏳ 当前本轮未生成直播源页面</h2>
 <p>本次检测没有产出可用列表，请等待下一次定时更新（每日02:00）</p>
-<p>Release下载页：<a href="https://github.com/${{ github.repository }}/releases">前往 Releases</a></p>
+<p>Release下载页：<a href="REPO_URL">前往 Releases</a></p>
 </body>
 </html>
 EOF
+            # 替换仓库链接
+            sed -i "s|REPO_URL|https://github.com/$REPO/releases|g" pages-site/index.html
           fi
-          # 强制写入 .nojekyll，禁止Jekyll解析markdown
+          # 强制写入 .nojekyll，禁止Jekyll渲染md
           touch pages-site/.nojekyll
       - name: Delete zero-size files before upload
         run: |

@@ -21,6 +21,12 @@ CETV-1
 CETV-2
 CETV-3
 CETV-4
+CGTN外语纪录
+CGTN阿拉伯语
+CGTN西班牙语
+CGTN法语
+CGTN俄语
+
 
 📡卫视频道,#genre#
 广西卫视

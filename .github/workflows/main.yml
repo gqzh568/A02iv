@@ -95,28 +95,10 @@ jobs:
             --pages-base-url "https://iptv.711933.xyz/"
           echo "final_file=$final_file" >> "$GITHUB_OUTPUT"
 
-          # 兜底：pages-site为空，生成简单提示页
           if [ -z "$(ls -A pages-site 2>/dev/null)" ]; then
             echo "⚠️ publish_results.py 没有生成页面，写入兜底index.html"
-            cat > pages-site/index.html <<'EOF'
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IPTV源 - 临时提示</title>
-</head>
-<body style="font-family:system-ui;padding:2rem;max-width:800px;margin:0 auto;">
-<h2>⏳ 当前本轮未生成直播源页面</h2>
-<p>本次检测没有产出可用列表，请等待下一次定时更新（每日02:00）</p>
-<p>Release下载页：<a href="REPO_URL">前往 Releases</a></p>
-</body>
-</html>
-EOF
-            # 替换仓库链接
-            sed -i "s|REPO_URL|https://github.com/$REPO/releases|g" pages-site/index.html
+            echo '<html><body><h2>本轮暂无直播源页面</h2><p>等待下次02:00更新</p><p><a href="https://github.com/'$REPO'/releases">前往Releases</a></p></body></html>' > pages-site/index.html
           fi
-          # 强制写入 .nojekyll，禁止Jekyll渲染md
           touch pages-site/.nojekyll
       - name: Delete zero-size files before upload
         run: |

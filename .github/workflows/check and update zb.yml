@@ -2,8 +2,8 @@ name: Check and Update zb.txt
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 12 * * *'
-      timezone: Asia/Shanghai
+    - cron: '0 7 * * *'
+      timezone: 'Asia/Shanghai'
 jobs:
   check-update:
     runs-on: ubuntu-latest

@@ -10,10 +10,9 @@ from utils.tools import resource_path
 
 
 class IPChecker:
-    IPDB_URLS = [
-        "https://raw.githubusercontent.com/gqzh568/iptv1/refs/heads/master/utils/ip_checker/data/qqwry.ipdb",
-        "https://cdn.jsdelivr.net/npm/qqwry.ipdb/qqwry.ipdbb",
-    ]
+    # ========== 这里改成你仓库A的raw链接！！==========
+    # 示例模板："https://raw.githubusercontent.com/xxx/repoA/main/utils/ip_checker/data/qqwry.ipdb"
+    IPDB_RAW_URL = "https://raw.githubusercontent.com/Guovin/iptv-api/refs/heads/master/utils/ip_checker/data/qqwry.ipdb"
 
     def __init__(self):
         self.db_path = resource_path("utils/ip_checker/data/qqwry.ipdb")
@@ -21,41 +20,46 @@ class IPChecker:
         os.makedirs(db_dir, exist_ok=True)
 
         self.db: Optional[ipdb.City] = None
-        # 尝试加载/下载ip库
         try:
             if not os.path.exists(self.db_path):
-                self._download_ipdb()
+                self._download_ipdb_from_repoA()
             self.db = ipdb.City(self.db_path)
         except Exception as e:
-            print(f"⚠️ IP库初始化失败，IP归属查询功能不可用: {e}")
+            print(f"⚠️ IP库初始化失败（无法从A仓库拉取ipdb），IP归属查询不可用: {e}")
 
         self.url_host = {}
         self.host_ip = {}
         self.host_ipv_type = {}
 
-    def _download_ipdb(self):
-        print(f"本地ip库不存在，开始自动下载 qqwry.ipdb -> {self.db_path}")
+    def _download_ipdb_from_repoA(self):
+        """从仓库A的github raw链接下载ipdb，保存到B仓库本地对应路径"""
+        print(f"本地 qqwry.ipdb 不存在，开始从仓库A下载 -> {self.db_path}")
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         }
-        for url in self.IPDB_URLS:
-            try:
-                resp = requests.get(url, headers=headers, timeout=30, stream=True)
-                resp.raise_for_status()
-                with open(self.db_path, "wb") as f:
-                    for chunk in resp.iter_content(chunk_size=1024 * 128):
-                        f.write(chunk)
-                # 简单校验：下载后尝试打开，打不开就删掉坏文件
-                test_db = ipdb.City(self.db_path)
-                del test_db
-                print(f"✅ ipdb下载成功，来源：{url}")
-                return
-            except Exception as e:
-                print(f"❌ 从 {url} 下载失败或文件损坏: {e}，尝试下一个源")
-                # 清理损坏文件
-                if os.path.exists(self.db_path):
-                    os.remove(self.db_path)
-        raise RuntimeError("所有ipdb下载源均失败，请检查网络！")
+        try:
+            resp = requests.get(
+                self.IPDB_RAW_URL,
+                headers=headers,
+                timeout=60,
+                stream=True
+            )
+            resp.raise_for_status()
+
+            with open(self.db_path, "wb") as f:
+                for chunk in resp.iter_content(chunk_size=128 * 1024):
+                    f.write(chunk)
+
+            # 校验：下载完尝试打开，确认文件没有损坏
+            test_db = ipdb.City(self.db_path)
+            del test_db
+            print("✅ 成功从仓库A下载 qqwry.ipdb")
+        except Exception as e:
+            print(f"❌ 从仓库A下载ipdb失败或文件损坏: {e}")
+            # 清理残缺/损坏文件
+            if os.path.exists(self.db_path):
+                os.remove(self.db_path)
+            raise
 
     def get_host(self, url: str) -> str:
         """Get the host from a URL"""

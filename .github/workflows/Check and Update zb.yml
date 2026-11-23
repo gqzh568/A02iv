@@ -1,0 +1,56 @@
+name: Check and Update zb.txt
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  check-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: chack aowu jm
+        run: |
+          set -e
+          curl -fsSL --connect-timeout 20 \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"url":"http://118.89.172.248:8025/jar/zb.php"}' \
+            "http://xn--nsr30b.cc/api/decode.php" -o /tmp/resp.json
+          cat /tmp/resp.json
+
+          # 校验返回是否ok
+          if ! jq -e '.ok == true' /tmp/resp.json >/dev/null; then
+            echo "❌ 解密接口返回失败，跳过更新"
+            exit 0
+          fi
+          # 提取明文
+          jq -r '.data' /tmp/resp.json > /tmp/plain.txt
+          if [ ! -s /tmp/plain.txt ]; then
+            echo "❌ 解密后内容为空，跳过更新"
+            exit 0
+          fi
+
+      - name: Diff对比，更新 config/local/zb.txt
+        id: diff_step
+        run: |
+          # 先确保目录存在
+          mkdir -p ./config/local
+          TARGET_FILE="./config/local/zb.txt"
+          if [ -f "$TARGET_FILE" ] && diff -q /tmp/plain.txt "$TARGET_FILE";then
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            cp /tmp/plain.txt "$TARGET_FILE"
+          fi
+
+      - name: Commit & Push
+        if: steps.diff_step.outputs.changed == 'true'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add ./config/local/zb.txt
+          git commit -m "auto update zb.txt (aowu api decode)"
+          git push

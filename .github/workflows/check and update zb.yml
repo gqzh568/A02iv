@@ -51,6 +51,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add ./config/local/zb.txt
+          git add ./zb.txt
           git commit -m "auto update zb.txt (aowu api decode)"
           git push

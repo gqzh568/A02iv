@@ -11,7 +11,7 @@ from utils.tools import resource_path
 
 class IPChecker:
     IPDB_URLS = [
-        "hhttps://raw.githubusercontent.com/gqzh568/iptv1/refs/heads/master/utils/ip_checker/data/qqwry.ipdb",
+        "https://raw.githubusercontent.com/gqzh568/iptv1/refs/heads/master/utils/ip_checker/data/qqwry.ipdb",
         "https://cdn.jsdelivr.net/npm/qqwry.ipdb/qqwry.ipdbb",
     ]
 

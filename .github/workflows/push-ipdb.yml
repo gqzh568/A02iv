@@ -1,0 +1,34 @@
+name: push qqwry.ipdb
+on:
+  workflow_dispatch:
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    env:
+      TARGET_OWNER: gqzh5668
+      TARGET_REPO: itv
+      TARGET_BRANCH: main
+      FILE_PATH: utils/ip_checker/data//qqwry.ipdb
+      SRC_URL: https://raw.githubusercontent.com/Guovin/iptv-api/refs/heads/master/utils/ip_checker/data/qqwry.ipdb
+    steps:
+      - name: download file
+        run: wget -O qqwry.ipdb ${{ env.SRC_URL }}
+
+      - name: base64 encode
+        id: enc
+        run: echo "data=$(base64 -w 0 qqwry.ipdb)" >> $GITHUB_OUTPUT
+
+      - name: upload to repo
+        env:
+          TOKEN: ${{ secrets.REPO_PAT }}
+        run: |
+          curl -X PUT \
+            -H "Authorization: token ${TOKEN}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ env.TARGET_OWNER }}/${{ env.TARGET_REPO }}/contents/${{ env.FILE_PATH }} \
+            -d @<(jq -n \
+              --arg msg "update qqwry.ipdb" \
+              --arg content "${{ steps.enc.outputs.data }}" \
+              --arg branch "${{ env.TARGET_BRANCH }}" \
+              '{message:$msg, content:$content, branch:$branch}')

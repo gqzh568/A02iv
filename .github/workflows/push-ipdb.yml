@@ -6,29 +6,29 @@ jobs:
   push:
     runs-on: ubuntu-latest
     env:
-      TARGET_OWNER: gqzh5668
+      TARGET_OWNER: gqzh568
       TARGET_REPO: itv
       TARGET_BRANCH: main
-      FILE_PATH: utils/ip_checker/data//qqwry.ipdb
+      FILE_PATH: utils/ip_checker/data/qqwry.ipdb
       SRC_URL: https://raw.githubusercontent.com/Guovin/iptv-api/refs/heads/master/utils/ip_checker/data/qqwry.ipdb
     steps:
-      - name: download file
-        run: wget -O qqwry.ipdb ${{ env.SRC_URL }}
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.TARGET_OWNER }}/${{ env.TARGET_REPO }}
+          ref: ${{ env.TARGET_BRANCH }}
+          token: ${{ secrets.REPO_PAT }}
+          fetch-depth: 1
 
-      - name: base64 encode
-        id: enc
-        run: echo "data=$(base64 -w 0 qqwry.ipdb)" >> $GITHUB_OUTPUT
-
-      - name: upload to repo
-        env:
-          TOKEN: ${{ secrets.REPO_PAT }}
+      - name: Download qqwry.ipdb
         run: |
-          curl -X PUT \
-            -H "Authorization: token ${TOKEN}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ env.TARGET_OWNER }}/${{ env.TARGET_REPO }}/contents/${{ env.FILE_PATH }} \
-            -d @<(jq -n \
-              --arg msg "update qqwry.ipdb" \
-              --arg content "${{ steps.enc.outputs.data }}" \
-              --arg branch "${{ env.TARGET_BRANCH }}" \
-              '{message:$msg, content:$content, branch:$branch}')
+          mkdir -p $(dirname ${{ env.FILE_PATH }})
+          wget -O ${{ env.FILE_PATH }} ${{ env.SRC_URL }}
+
+      - name: Git commit and push
+        run: |
+          git config --global user.name "IPDB Bot"
+          git config --global user.email "bot@github@example.com"
+          git add ${{ env.FILE_PATH }}
+          git commit -m "auto update qqwry.ipdb" || echo "no changes to commit"
+          git push

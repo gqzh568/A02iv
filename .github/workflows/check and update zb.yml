@@ -11,7 +11,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: chack aowu jm
+      - name: check aowu jm
         run: |
           set -e
           curl -fsSL --connect-timeout 20 \
@@ -26,24 +26,43 @@ jobs:
             echo "❌ 解密接口返回失败，跳过更新"
             exit 0
           fi
-          # 提取明文
-          jq -r '.data' /tmp/resp.json > /tmp/plain.txt
-          if [ ! -s /tmp/plain.txt ]; then
-            echo "❌ 解密后内容为空，跳过更新"
+          # 提取原始明文，存入原始临时文件
+          jq -r '.data' /tmp/resp.json > /tmp/raw.txt
+          if [ ! -s /tmp/raw.txt ]; then
+            echo "❌ 解密后原始内容为空，跳过更新"
             exit 0
           fi
 
-      - name: Diff对比，更新 config/zb.txt
+      - name: 临时文件内部去重筛选（区分大小写，仅整行完全相同删除）
+        run: |
+          awk '!seen[$0]++' /tmp/raw.txt > /tmp/deduped.txt
+          BEFORE=$(wc -l < /tmp/raw.txt)
+          AFTER=$(wc -l < /tmp/deduped.txt)
+          echo "去重前 ${BEFORE} 行，去重后 ${AFTER} 行，移除重复 $((BEFORE - AFTER)) 行"
+
+          if [ ! -s /tmp/deduped.txt ]; then
+            echo "❌ 去重之后内容为空，跳过更新"
+            exit 0
+          fi
+
+      - name: Diff对比精简文件与 zb.txt
         id: diff_step
         run: |
-          # 先确保目录存在
-          mkdir -p ./config/local
+          mkdir -p ./config
           TARGET_FILE="./config/zb.txt"
-          if [ -f "$TARGET_FILE" ] && diff -q /tmp/plain.txt "$TARGET_FILE";then
-            echo "changed=false" >> $GITHUB_OUTPUT
+          DEDUP_FILE="/tmp/deduped.txt"
+
+          if [ -f "$TARGET_FILE" ]; then
+            if diff -q "$DEDUP_FILE" "$TARGET_FILE"; then
+              echo "changed=false" >> $GITHUB_OUTPUT
+            else
+              echo "changed=true" >> $GITHUB_OUTPUT
+              cp "$DEDUP_FILE" "$TARGET_FILE"
+            fi
           else
+            # 文件不存在，直接新建写入
             echo "changed=true" >> $GITHUB_OUTPUT
-            cp /tmp/plain.txt "$TARGET_FILE"
+            cp "$DEDUP_FILE" "$TARGET_FILE"
           fi
 
       - name: Commit & Push
@@ -52,5 +71,5 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add ./config/zb.txt
-          git commit -m "auto update zb.txt (aowu api decode)"
+          git commit -m "auto update zb.txt (aowu api decode + dedup)"
           git push

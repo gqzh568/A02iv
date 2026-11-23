@@ -2,7 +2,7 @@ name: Generate playlist manually
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 2 * * 5'
+    - cron: '0 7 * * *'
       timezone: 'Asia/Shanghai'
 permissions:
   contents: read

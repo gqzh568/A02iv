@@ -92,7 +92,7 @@ jobs:
             --generated-at "${{ steps.release.outputs.generated_at }}" \
             --release-tag "${{ steps.release.outputs.tag }}" \
             --pages-destination pages-site \
-            --pages-base-url "https://iptv.711933.xyz/"
+            --pages-base-url "https://itv.711933.xyz/"
           echo "final_file=$final_file" >> "$GITHUB_OUTPUT"
 
           if [ -z "$(ls -A pages-site 2>/dev/null)" ]; then
@@ -148,7 +148,7 @@ jobs:
       - name: Add subscription links to summary
         env:
           RELEASE_BASE: https://github.com/${{ github.repository }}/releases/download/${{ steps.release.outputs.tag }}
-          PAGES_BASE: https://iptv.711933.xyz/
+          PAGES_BASE: https://itv.711933.xyz/
         run: |
           {
             echo "### Published playlist"

@@ -33,12 +33,12 @@ jobs:
             exit 0
           fi
 
-      - name: Diff对比，更新 config/local/zb.txt
+      - name: Diff对比，更新 config/zb.txt
         id: diff_step
         run: |
           # 先确保目录存在
           mkdir -p ./config/local
-          TARGET_FILE="./config/local/zb.txt"
+          TARGET_FILE="./config/zb.txt"
           if [ -f "$TARGET_FILE" ] && diff -q /tmp/plain.txt "$TARGET_FILE";then
             echo "changed=false" >> $GITHUB_OUTPUT
           else
@@ -51,6 +51,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add ./zb.txt
+          git add ./config/zb.txt
           git commit -m "auto update zb.txt (aowu api decode)"
           git push

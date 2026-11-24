@@ -2,7 +2,7 @@ name: Check and Update zb.txt
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 7 * * *'
+    - cron: '0 */3 * * *'
       timezone: 'Asia/Shanghai'
 jobs:
   check-update:
@@ -48,8 +48,8 @@ jobs:
       - name: Diff对比精简文件与 zb.txt
         id: diff_step
         run: |
-          mkdir -p ./config
-          TARGET_FILE="./config/zb.txt"
+          # 改这里：目标文件放到仓库根目录
+          TARGET_FILE="./zb.txt"
           DEDUP_FILE="/tmp/deduped.txt"
 
           if [ -f "$TARGET_FILE" ]; then
@@ -70,6 +70,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add ./config/zb.txt
+          git add ./zb.txt
           git commit -m "auto update zb.txt (aowu api decode + dedup)"
           git push
